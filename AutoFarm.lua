@@ -1,3 +1,4 @@
+```lua
 --// AUTO FARM MODULE
 local AutoFarm = {}
 
@@ -12,78 +13,33 @@ local HitRemote   = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Atta
 
 local Config = {
     AutoFarm      = false,
-    SelectedMob   = "",
+    SelectedMob   = "Nemo",
     SelectedWorld = "World 1",
 }
 
-local lastHit   = 0
 local WorldList = { "World 1", "World 2", "World 3", "World 4", "World 5" }
 
--- ─────────────────────────────────────────
--- LẤY DANH SÁCH MOB THEO WORLD + SẮP XẾP HP TĂNG DẦN
--- ─────────────────────────────────────────
+-- Lấy danh sách mob trong Enemies
 local function getMobNames()
-    local mobData = {}  -- { name, hp } để sort
-    local seen    = {}
+    local names, seen = {}, {}
     local enemies = workspace:FindFirstChild("Enemies")
-
     if enemies then
         for _, mob in ipairs(enemies:GetChildren()) do
             local hum = mob:FindFirstChildOfClass("Humanoid")
-            if hum and hum.Health > 0 then
-
-                -- Lọc theo IslandName
-                local islandVal = mob:FindFirstChild("IslandName")
-                local mobWorld  = islandVal and islandVal.Value or nil
-
-                if mobWorld == Config.SelectedWorld and not seen[mob.Name] then
-                    seen[mob.Name] = true
-
-                    -- Đọc ScaledMaxHP từ Properties
-                    local hpVal = mob:FindFirstChild("ScaledMaxHP")
-                    local hp    = hpVal and hpVal.Value or hum.MaxHealth or 0
-
-                    table.insert(mobData, { name = mob.Name, hp = hp })
-                end
+            if hum and hum.Health > 0 and not seen[mob.Name] then
+                seen[mob.Name] = true
+                table.insert(names, mob.Name)
             end
         end
     end
-
-    -- Sắp xếp theo HP tăng dần
-    table.sort(mobData, function(a, b)
-        return a.hp < b.hp
-    end)
-
-    -- Format tên hiển thị: "Nemo (350K HP)"
-    local names = {}
-    local nameMap = {}  -- map display → tên thật để dùng khi farm
-
-    for _, data in ipairs(mobData) do
-        local hpDisplay
-        if data.hp >= 1000000 then
-            hpDisplay = string.format("%.1fM", data.hp / 1000000)
-        elseif data.hp >= 1000 then
-            hpDisplay = string.format("%.0fK", data.hp / 1000)
-        else
-            hpDisplay = tostring(data.hp)
-        end
-
-        local display = data.name .. " (" .. hpDisplay .. " HP)"
-        table.insert(names, display)
-        nameMap[display] = data.name
-    end
-
+    table.sort(names)
     if #names == 0 then
         table.insert(names, "(Chưa có mob)")
-        nameMap["(Chưa có mob)"] = ""
     end
-
-    return names, nameMap
+    return names
 end
 
--- ─────────────────────────────────────────
--- TÌM MOB GẦN NHẤT
--- ─────────────────────────────────────────
+-- Tìm mob gần nhất
 local function findNearestMob()
     local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return nil end
@@ -108,19 +64,15 @@ local function findNearestMob()
     return nearest
 end
 
--- ─────────────────────────────────────────
--- ĐÁNH MOB
--- ─────────────────────────────────────────
+-- Đánh mob
 local function attackMob(mobPart)
     if not mobPart or not mobPart.Parent then return end
-    if tick() - lastHit then return end
-    lastHit = tick()
 
     local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
     hrp.CFrame = CFrame.new(mobPart.Position + Vector3.new(0, 0, 2.5))
-    task.wait(0.05)
+    task.wait()
 
     local screenPos, onScreen = camera:WorldToScreenPoint(mobPart.Position)
     if onScreen then
@@ -130,9 +82,7 @@ local function attackMob(mobPart)
     HitRemote:FireServer()
 end
 
--- ─────────────────────────────────────────
--- FARM LOOP
--- ─────────────────────────────────────────
+-- Farm loop
 RunService.Heartbeat:Connect(function()
     if not Config.AutoFarm then return end
     local char = LocalPlayer.Character
@@ -144,23 +94,15 @@ RunService.Heartbeat:Connect(function()
     if mob then attackMob(mob) end
 end)
 
--- ─────────────────────────────────────────
--- BUILD UI
--- ─────────────────────────────────────────
+-- Build UI
 function AutoFarm.BuildUI(tab, Fluent, Options)
 
-    -- nameMap dùng chung trong scope BuildUI
-    local currentNameMap = {}
-
     local function refreshMobDropdown()
-        local names, nameMap = getMobNames()
-        currentNameMap = nameMap
-
+        local names = getMobNames()
         if Options.MobSelect then
             Options.MobSelect:SetValues(names)
-            local first = names[1] or ""
-            Options.MobSelect:SetValue(first)
-            Config.SelectedMob = nameMap[first] or ""
+            Options.MobSelect:SetValue(names[1] or "")
+            Config.SelectedMob = names[1] or "Nemo"
         end
         return #names
     end
@@ -170,47 +112,40 @@ function AutoFarm.BuildUI(tab, Fluent, Options)
         Content = "Chọn World → Chọn Mob → Bật farm."
     })
 
-    -- Dropdown World
     tab:AddDropdown("WorldSelect", {
         Title    = "Chọn World",
         Values   = WorldList,
         Default  = Config.SelectedWorld,
         Callback = function(val)
             Config.SelectedWorld = val
-            Config.AutoFarm      = false  -- tắt farm khi đổi world
+            Config.AutoFarm      = false
 
-            -- Clear tạm
-            if Options.MobSelect then
-                Options.MobSelect:SetValues({ "(Đang load...)" })
-            end
+            Fluent:Notify({
+                Title   = "⏳ Đổi sang " .. val,
+                Content = "Đang chờ map load...",
+                Duration = 3
+            })
 
-            -- Đợi map load xong rồi refresh
             task.delay(3, function()
                 local count = refreshMobDropdown()
                 Fluent:Notify({
                     Title   = "✅ " .. val,
-                    Content = count .. " mob · sắp xếp theo HP tăng dần",
+                    Content = count .. " mob tìm thấy",
                     Duration = 3
                 })
             end)
         end
     })
 
-    -- Dropdown Mob (hiển thị tên + HP, sắp xếp tăng dần)
-    local initNames, initMap = getMobNames()
-    currentNameMap = initMap
-
     tab:AddDropdown("MobSelect", {
         Title    = "Chọn Mob",
-        Values   = initNames,
-        Default  = initNames[1] or "",
+        Values   = getMobNames(),
+        Default  = Config.SelectedMob,
         Callback = function(val)
-            -- Dùng nameMap để lấy tên thật của mob
-            Config.SelectedMob = currentNameMap[val] or val
+            Config.SelectedMob = val
         end
     })
 
-    -- Toggle Auto Farm
     tab:AddToggle("AutoFarmToggle", {
         Title    = "Auto Farm",
         Default  = false,
@@ -224,8 +159,19 @@ function AutoFarm.BuildUI(tab, Fluent, Options)
         end
     })
 
-
-
+    tab:AddButton({
+        Title       = "🔄 Refresh Mob List",
+        Description = "Cập nhật lại danh sách mob trong map",
+        Callback    = function()
+            local count = refreshMobDropdown()
+            Fluent:Notify({
+                Title   = "🔄 Đã refresh!",
+                Content = count .. " mob tìm thấy",
+                Duration = 2
+            })
+        end
+    })
 end
 
 return AutoFarm
+```
