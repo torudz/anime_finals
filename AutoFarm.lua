@@ -12,8 +12,8 @@ local HitRemote   = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Atta
 
 local Config = {
     AutoFarm      = false,
-    SelectedMob   = "Nemo",
-    SelectedWorld = "World 1",
+    SelectedMob   = "",
+    SelectedWorld = "",
 }
 
 local WorldList = { "World 1", "World 2", "World 3", "World 4", "World 5" }
