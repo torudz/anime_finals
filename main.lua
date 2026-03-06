@@ -47,22 +47,8 @@ ToggleButton.Draggable        = true
 ToggleButton.BorderSizePixel  = 0
 Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(0, 10)
 
--- FIX LỖI 1: Window:Minimize() không tồn tại trong Fluent
--- Dùng cách toggle Enabled của ScreenGui thay thế
-local fluentGui = nil
 ToggleButton.MouseButton1Click:Connect(function()
-    -- Tìm Fluent ScreenGui lần đầu
-    if not fluentGui then
-        for _, gui in ipairs(game.CoreGui:GetChildren()) do
-            if gui:IsA("ScreenGui") and gui.Name ~= "ToruMobileBtn" and gui:FindFirstChildOfClass("Frame") then
-                fluentGui = gui
-                break
-            end
-        end
-    end
-    if fluentGui then
-        fluentGui.Enabled = not fluentGui.Enabled
-    end
+    Window:Minimize()
 end)
 
 --// TABS
