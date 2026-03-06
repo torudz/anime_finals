@@ -100,7 +100,7 @@ tab:AddToggle("AutoBijuRoll", {
                     task.wait()
                 end)
             else
-                if bijuConn then bijuConn:Disconnect() bijuConn = nil end   bijuConn
+                if bijuConn then bijuConn:Disconnect() bijuConn = nil end  
             end
         end
     })
