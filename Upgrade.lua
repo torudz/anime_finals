@@ -10,6 +10,7 @@ local PowerRollRemote = Remotes:WaitForChild("RequestPowerRoll")
 
 -- FIX LỖI 3: mỗi conn dùng biến riêng, không gán nhầm
 local hakiConn  = nil
+local chakraConn = nil
 local fruitConn = nil
 local raceConn  = nil   -- ← tách riêng, không dùng chung fruitConn
 
@@ -21,7 +22,23 @@ function Upgrade.BuildUI(tab, Fluent, Options)
     })
 
     -- Auto Haki
-    tab:AddToggle("AutoHaki", {
+    tab:AddToggle("AutoChakra", {
+        Title       = "Auto Chakra Upgrade",
+        Description = "",
+        Default     = false,
+        Callback    = function(val)
+            if val then
+                chakraConn = RunService.Heartbeat:Connect(function()
+                    UpgradeRemote:InvokeServer("Chakra")
+                    task.wait()
+                end)
+            else
+                if chakraConn then chakraConn:Disconnect() chakraConn = nil end
+            end
+        end
+    })
+
+tab:AddToggle("AutoHaki", {
         Title       = "Auto Haki Upgrade",
         Description = "Tự động spam RequestProgressionUpgrade Haki",
         Default     = false,
@@ -29,7 +46,7 @@ function Upgrade.BuildUI(tab, Fluent, Options)
             if val then
                 hakiConn = RunService.Heartbeat:Connect(function()
                     UpgradeRemote:InvokeServer("Haki")
-                    task.wait(0.1)
+                    task.wait()
                 end)
             else
                 if hakiConn then hakiConn:Disconnect() hakiConn = nil end
@@ -46,7 +63,7 @@ function Upgrade.BuildUI(tab, Fluent, Options)
             if val then
                 fruitConn = RunService.Heartbeat:Connect(function()  -- ← fruitConn
                     PowerRollRemote:InvokeServer("Fruit")
-                    task.wait(0.1)
+                    task.wait()
                 end)
             else
                 if fruitConn then fruitConn:Disconnect() fruitConn = nil end
@@ -63,7 +80,7 @@ function Upgrade.BuildUI(tab, Fluent, Options)
             if val then
                 raceConn = RunService.Heartbeat:Connect(function()   -- ← raceConn
                     PowerRollRemote:InvokeServer("Race")
-                    task.wait(0.1)
+                    task.wait()
                 end)
             else
                 if raceConn then raceConn:Disconnect() raceConn = nil end  -- ← raceConn
