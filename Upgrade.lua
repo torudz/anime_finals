@@ -14,6 +14,7 @@ local chakraConn = nil
 local fruitConn = nil
 local raceConn  = nil   
 local bijuConn = nil
+local taijutsuConn = nil
 
 --// BUILD UI
 function Upgrade.BuildUI(tab, Fluent, Options)
@@ -51,6 +52,21 @@ tab:AddToggle("AutoHaki", {
                 end)
             else
                 if hakiConn then hakiConn:Disconnect() hakiConn = nil end
+            end
+        end
+    })
+tab:AddToggle("AutoTaijutsu", {
+        Title       = "Auto Taijutsu Upgrade",
+        Description = "",
+        Default     = false,
+        Callback    = function(val)
+            if val then
+                taijutsuConn = RunService.Heartbeat:Connect(function()
+                    UpgradeRemote:InvokeServer("Taijutsu")
+                    task.wait()
+                end)
+            else
+                if taijutsuConn then taijutsuConn:Disconnect() taijutsuConn = nil end
             end
         end
     })
