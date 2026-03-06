@@ -1,4 +1,3 @@
-```lua
 --// AUTO FARM MODULE
 local AutoFarm = {}
 
@@ -174,4 +173,3 @@ function AutoFarm.BuildUI(tab, Fluent, Options)
 end
 
 return AutoFarm
-```
