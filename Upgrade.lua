@@ -15,6 +15,7 @@ local fruitConn = nil
 local raceConn  = nil   
 local bijuConn = nil
 local taijutsuConn = nil
+local doujutsuConn = nil
 
 --// BUILD UI
 function Upgrade.BuildUI(tab, Fluent, Options)
@@ -117,6 +118,22 @@ tab:AddToggle("AutoBijuRoll", {
                 end)
             else
                 if bijuConn then bijuConn:Disconnect() bijuConn = nil end  
+            end
+        end
+    })
+
+tab:AddToggle("AutoDoijutsuRoll", {
+        Title       = "Auto Doujutsu Roll",
+        Description = "",
+        Default     = false,
+        Callback    = function(val)
+            if val then
+                doujutsuConn = RunService.Heartbeat:Connect(function()   
+                    PowerRollRemote:InvokeServer("Doujutsu")
+                    task.wait()
+                end)
+            else
+                if doujutsuConn then doujutsuConn:Disconnect() doujutsuConn = nil end  
             end
         end
     })
