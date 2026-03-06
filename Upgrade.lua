@@ -12,7 +12,8 @@ local PowerRollRemote = Remotes:WaitForChild("RequestPowerRoll")
 local hakiConn  = nil
 local chakraConn = nil
 local fruitConn = nil
-local raceConn  = nil   -- ← tách riêng, không dùng chung fruitConn
+local raceConn  = nil   
+local bijuConn = nil
 
 --// BUILD UI
 function Upgrade.BuildUI(tab, Fluent, Options)
@@ -40,7 +41,7 @@ function Upgrade.BuildUI(tab, Fluent, Options)
 
 tab:AddToggle("AutoHaki", {
         Title       = "Auto Haki Upgrade",
-        Description = "Tự động spam RequestProgressionUpgrade Haki",
+        Description = "",
         Default     = false,
         Callback    = function(val)
             if val then
@@ -57,7 +58,7 @@ tab:AddToggle("AutoHaki", {
     -- Auto Fruit Roll
     tab:AddToggle("AutoFruitRoll", {
         Title       = "Auto Fruit Roll",
-        Description = "Tự động spam RequestPowerRoll Fruit",
+        Description = "",
         Default     = false,
         Callback    = function(val)
             if val then
@@ -74,7 +75,7 @@ tab:AddToggle("AutoHaki", {
     -- Auto Race Roll (FIX: dùng raceConn, không phải fruitConn)
     tab:AddToggle("AutoRaceRoll", {
         Title       = "Auto Race Roll",
-        Description = "Tự động spam RequestPowerRoll Race",
+        Description = "",
         Default     = false,
         Callback    = function(val)
             if val then
@@ -84,6 +85,22 @@ tab:AddToggle("AutoHaki", {
                 end)
             else
                 if raceConn then raceConn:Disconnect() raceConn = nil end  -- ← raceConn
+            end
+        end
+    })
+
+tab:AddToggle("AutoBijuRoll", {
+        Title       = "Auto biju Roll",
+        Description = "",
+        Default     = false,
+        Callback    = function(val)
+            if val then
+                bijuConn = RunService.Heartbeat:Connect(function()   
+                    PowerRollRemote:InvokeServer("Biju")
+                    task.wait()
+                end)
+            else
+                if bijuConn then bijuConn:Disconnect() bijuConn = nil end   bijuConn
             end
         end
     })
